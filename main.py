@@ -1,10 +1,14 @@
 from fastapi import FastAPI, File, UploadFile
-import shutil
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    with open(f"uploaded_{file.filename}", "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    return {"message": "File uploaded successfully"}
+    try:
+        file_location = f"./uploaded_files/{file.filename}"
+        with open(file_location, "wb") as f:
+            f.write(await file.read())
+        return JSONResponse(content={"message": "File uploaded successfully!", "file_path": file_location})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)})
